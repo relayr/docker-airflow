@@ -5,15 +5,13 @@ node('jenkins-neokami-slave', {
     airflowVersion = "1.10.9"
 
     timestamps {
-        withEnv(['FORMATTED_BRANCH_NAME=' + formattedBranchName,
-                 'BUILD_NUMBER=' + env.BUILD_NUMBER,
-                 'AIRFLOW_VERSION=' + airflowVersion]) {
+        withEnv(['AIRFLOW_VERSION=' + airflowVersion]) {
 
             stage('Preparing VirtualEnv') {
                 cleanWs()
                 checkout scm
 
-if (env.BRANCH_NAME == "master" && !isStartedByTimeTrigger()) {
+if (env.BRANCH_NAME == "master") {
                 stage('Build and Publish Docker Image') {
                     try {
                         sh """
