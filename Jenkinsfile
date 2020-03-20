@@ -11,18 +11,16 @@ node('jenkins-neokami-slave', {
                 cleanWs()
                 checkout scm
 
-if (env.BRANCH_NAME == "master") {
-                stage('Build and Publish Docker Image') {
-                    try {
-                        sh """
-                            docker build -t relayr/docker-airflow:${AIRFLOW_VERSION} --build-arg AIRFLOW_VERSION=${AIRFLOW_VERSION} .
-                            docker push relayr/docker-airflow:${AIRFLOW_VERSION}
-                            docker rmi relayr/docker-airflow:${AIRFLOW_VERSION}
-                        """
-                    } catch (e) {
-                        notifyBuild('Failed', 'Build and Publish Docker Image')
-                        throw e
-                    }
+            stage('Build and Publish Docker Image') {
+                try {
+                    sh """
+                        docker build -t relayr/docker-airflow:${AIRFLOW_VERSION} --build-arg AIRFLOW_VERSION=${AIRFLOW_VERSION} .
+                        docker push relayr/docker-airflow:${AIRFLOW_VERSION}
+                        docker rmi relayr/docker-airflow:${AIRFLOW_VERSION}
+                    """
+                } catch (e) {
+                    notifyBuild('Failed', 'Build and Publish Docker Image')
+                    throw e
                 }
             }
         }
