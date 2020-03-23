@@ -7,41 +7,52 @@ node('jenkins-neokami-slave', {
             checkout scm
           }
 
-    properties([
-                buildDiscarder(
-                        logRotator(
-                                artifactDaysToKeepStr: '',
-                                artifactNumToKeepStr: '20',
-                                daysToKeepStr: '',
-                                numToKeepStr: '20'
-                        )
-                ),
-                pipelineTriggers([[$class: 'GitHubPushTrigger']])
-        ])
+        properties([
+                    buildDiscarder(
+                            logRotator(
+                                    artifactDaysToKeepStr: '',
+                                    artifactNumToKeepStr: '20',
+                                    daysToKeepStr: '',
+                                    numToKeepStr: '20'
+                            )
+                    ),
+                    pipelineTriggers([[$class: 'GitHubPushTrigger']])
+            ])
 
-    if (env.BRANCH_NAME == "master") {
-            stage('Publish and Publish Docker Image') {
+        stage('Build Docker Image') {
+            try {
+                sh """
+                    set -o pipefail
+                    docker build -t relayr/docker-airflow:${AIRFLOW_VERSION} --build-arg AIRFLOW_VERSION=${AIRFLOW_VERSION} .
+                """
+            } catch (e) {
+                notifyBuild('Failed', 'Build Docker Image')
+                throw e
+            }
+        }
+
+        if (env.BRANCH_NAME == "master") {
+            stage('Publish Docker Image') {
                 try {
                     sh """
                         set -o pipefail
-                        docker build -t relayr/docker-airflow:${AIRFLOW_VERSION} --build-arg AIRFLOW_VERSION=${AIRFLOW_VERSION} .
                         docker push relayr/docker-airflow:${AIRFLOW_VERSION}
-                        docker rmi relayr/docker-airflow:${AIRFLOW_VERSION}
                     """
                 } catch (e) {
                     notifyBuild('Failed', 'Publish Docker Image')
                     throw e
                 }
             }
-        } else {
+        } 
+
+        stage('Delete Docker Image') {
             try {
                 sh """
                     set -o pipefail
-                    docker build -t relayr/docker-airflow:${AIRFLOW_VERSION} --build-arg AIRFLOW_VERSION=${AIRFLOW_VERSION} .
                     docker rmi relayr/docker-airflow:${AIRFLOW_VERSION}
                 """
             } catch (e) {
-                notifyBuild('Failed', 'Build Docker Image')
+                notifyBuild('Failed', 'Delete Docker Image')
                 throw e
             }
         }
