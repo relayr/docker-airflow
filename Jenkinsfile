@@ -22,7 +22,6 @@ node('jenkins-neokami-slave', {
         stage('Build Docker Image') {
             try {
                 sh """
-                    set -o pipefail
                     docker build -t relayr/docker-airflow:${AIRFLOW_VERSION} --build-arg AIRFLOW_VERSION=${AIRFLOW_VERSION} .
                 """
             } catch (e) {
@@ -35,7 +34,6 @@ node('jenkins-neokami-slave', {
             stage('Publish Docker Image') {
                 try {
                     sh """
-                        set -o pipefail
                         docker push relayr/docker-airflow:${AIRFLOW_VERSION}
                     """
                 } catch (e) {
@@ -48,7 +46,6 @@ node('jenkins-neokami-slave', {
         stage('Delete Docker Image') {
             try {
                 sh """
-                    set -o pipefail
                     docker rmi relayr/docker-airflow:${AIRFLOW_VERSION}
                 """
             } catch (e) {
